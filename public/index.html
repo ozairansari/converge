@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#141b21">
+<meta name="description" content="A multiplayer game of collective intuition. Choose a number, anticipate the group, and get closest to the hidden target.">
+<title>Converge — Think beyond the average.</title>
+<link rel="stylesheet" href="/style.css">
+<script src="/client.js" defer>
+</script>
+</head>
+<body>
+<header>
+<a href="/" class="brand">
+<svg viewBox="0 0 30 30" aria-hidden="true">
+<path d="M3 5 15 15 3 25M27 5 15 15 27 25" fill="none" stroke="currentColor" stroke-width="2.2"/>
+</svg>converge<span class="beta">MULTIPLAYER</span>
+</a>
+<div class="header-tools">
+<span id="connection">A GAME OF COLLECTIVE INTUITION</span>
+<button id="sound" aria-label="Mute sound" aria-pressed="true">SOUND ON</button>
+</div>
+</header>
+<main>
+<section id="home" class="view home">
+<div class="hero">
+<span class="eyebrow">
+<i>
+</i> SIMPLE NUMBERS. SECOND-ORDER THINKING.</span>
+<h1>Think beyond<br>
+<em>the average.</em>
+</h1>
+<p class="lead">Everyone chooses a number.<br>The winning choice depends on everyone else.</p>
+<div id="homepageDemo" class="hero-chart gameplay-demo" aria-label="Animated gameplay example" aria-describedby="demoAccessibleDescription">
+<div class="demo-header"><span class="demo-eyebrow"><i></i> GAMEPLAY PREVIEW</span><button id="demoPause" type="button" aria-label="Pause gameplay preview" aria-pressed="false">Ⅱ PAUSE</button></div>
+<div class="demo-stage-title"><span id="demoStage">01 / CHOOSE IN SECRET</span><span id="demoRound">ROUND 01</span></div>
+<div id="demoPlayers" class="demo-players" aria-hidden="true"></div>
+<div class="demo-equation" aria-hidden="true"><div><small>AVERAGE</small><b id="demoAverage">—</b></div><span>×</span><div><small>FACTOR</small><b id="demoFactor">⅔</b></div><span>=</span><div class="demo-target-stat"><small>TARGET</small><b id="demoTarget">—</b></div></div>
+<svg id="demoChart" viewBox="0 0 480 105" aria-hidden="true"><line x1="24" y1="61" x2="456" y2="61" stroke="#3a454f"/><g id="demoTargetGroup" opacity="0"><line id="demoTargetLine" x1="240" y1="22" x2="240" y2="83" stroke="#97cebd" stroke-dasharray="3 4"/><text id="demoTargetLabel" x="240" y="14" text-anchor="middle">TARGET</text></g><g id="demoDots"></g><text x="24" y="101">0</text><text x="456" y="101" text-anchor="end">100</text></svg>
+<div class="demo-bottom"><p id="demoCaption">Everyone locks in a private number.</p><span id="demoPoints"></span></div><div class="demo-progress" aria-hidden="true"><div id="demoProgress"></div></div>
+<p id="demoAccessibleDescription" class="sr-only">A looping example of three players locking choices, revealing their numbers, calculating the group's average times the round's multiplier, and awarding points to the closest guess. These are sample players, not a live room.</p>
+</div>
+<div class="specs">
+<span>2–8 PLAYERS</span>
+<span>8 ROUNDS</span>
+<span>~4 MINUTES</span>
+</div>
+</div>
+<div class="card join-card">
+<span class="eyebrow">START A SHARED EXPERIMENT</span>
+<h2>Find your people.</h2>
+<p>No accounts. No downloads. Just a room code.</p>
+<form id="joinForm">
+<label for="nickname">YOUR NAME</label>
+<input id="nickname" maxlength="18" autocomplete="nickname" placeholder="A name your friends know" required>
+<button id="create" type="button" class="button primary">Create a room <span>↗</span>
+</button>
+<div class="divider">OR JOIN AN EXISTING ROOM</div>
+<label for="roomCode">ROOM CODE</label>
+<div class="join-row">
+<input id="roomCode" maxlength="5" placeholder="ABCDE" autocapitalize="characters" spellcheck="false">
+<button class="button secondary" type="submit">Join →</button>
+</div>
+<p id="joinError" class="error" role="alert">
+</p>
+</form>
+<div class="privacy-note">
+<span>◈</span> Choices stay private until the reveal.</div>
+</div>
+<div class="steps">
+<article>
+<span>01 / CHOOSE</span>
+<h3>A number. A theory.</h3>
+<p>Pick a whole number from 0 to 100. Once locked, it cannot change.</p>
+</article>
+<article>
+<span>02 / ANTICIPATE</span>
+<h3>Read the collective.</h3>
+<p>The round's multiplier sets a target from everyone's average. Closest earns a bonus.</p>
+</article>
+<article>
+<span>03 / ADAPT</span>
+<h3>Make your next move.</h3>
+<p>You can't reuse numbers. Learn from the reveals and finish with the highest score.</p>
+</article>
+</div>
+</section>
+
+<section id="lobby" class="view hidden stage">
+<div class="stage-head">
+<div>
+<span class="eyebrow">THE TABLE IS OPEN</span>
+<h1>A room full<br>
+<em>of possibilities.</em>
+</h1>
+</div>
+<div class="room-card">
+<small>INVITE CODE</small>
+<button id="codeButton">
+</button>
+<button id="copyInvite" class="text-button">Copy invitation ↗</button>
+</div>
+</div>
+<div class="lobby-grid">
+<div class="card">
+<div class="section-title">THE COLLECTIVE <span id="playerCount">
+</span>
+</div>
+<div id="lobbyPlayers">
+</div>
+<p class="small">Share the invite link, or ask friends to enter this code from their own devices.</p>
+</div>
+<aside class="card rules">
+<span class="eyebrow">THE RULES, CLEARLY</span>
+<h2>One simple idea.<br>Eight iterations.</h2>
+<ol>
+<li>Everyone secretly chooses an unused whole number from <b>0 to 100</b> within <b>20 seconds</b>.</li>
+<li>The server averages submitted choices, then multiplies by the factor shown for the round. Targets are capped at 100.</li>
+<li>Score <b>max(0, 1000 − 20 × distance)</b>, rounded to a whole number, plus <b>250</b> if closest. Equal closest guesses share the bonus.</li>
+<li>Factors cycle through <b>⅔, 4/3, 0.8, 1.2</b>. Each number can be used once per match.</li>
+<li>Missed choices score zero. Fewer than two submissions means no points. After 8 rounds, the top total wins. Ties share the win.</li>
+</ol>
+<button id="start" class="button primary">Begin the experiment <span>↗</span>
+</button>
+<p id="hostNote" class="small">
+</p>
+<button id="leave" class="text-button">Leave room</button>
+</aside>
+</div>
+</section>
+
+<section id="game" class="view hidden game-stage">
+<div class="game-head">
+<div>
+<span class="eyebrow">THE COLLECTIVE IS THINKING</span>
+<h2 id="roundLabel">Iteration 01 <span>/ 08</span>
+</h2>
+</div>
+<div class="round-code">ROOM <b id="gameCode">
+</b>
+</div>
+<div class="timer">
+<b id="timeLeft">20</b>
+<small>SECONDS</small>
+</div>
+</div>
+<div class="game-grid">
+<div class="decision-area">
+<div id="countdown" class="countdown hidden">
+<span class="eyebrow">TAKE A MOMENT. THINK ONE STEP AHEAD.</span>
+<strong id="countdownNumber">3</strong>
+<p>What will they choose, knowing what you'll choose?</p>
+</div>
+<div id="roundArea">
+<div class="rule-card">
+<span class="eyebrow" id="modeName">UNDERTHINK</span>
+<div class="formula">GROUP AVERAGE <span>×</span> <b id="factorLabel">⅔</b>
+</div>
+<p id="modeHint">
+</p>
+</div>
+<div id="choicePanel" class="card choice-panel">
+<div class="choice-top">
+<label for="numberInput">YOUR NUMBER</label>
+<span id="choiceState">PRIVATE UNTIL REVEAL</span>
+</div>
+<div class="number-control">
+<button id="decrease" aria-label="Decrease number">−</button>
+<input id="numberInput" type="number" min="0" max="100" step="1" value="50" inputmode="numeric" aria-label="Your chosen number">
+<button id="increase" aria-label="Increase number">+</button>
+</div>
+<input id="numberSlider" type="range" min="0" max="100" step="1" value="50" aria-label="Choose your number">
+<div class="range-labels">
+<span>0</span>
+<span>100</span>
+</div>
+<button id="lock" class="button primary">Lock in 50 <span>↗</span>
+</button>
+<p id="selectionNote" class="small center">
+</p>
+<div class="used-row">
+<span>USED THIS MATCH</span>
+<div id="usedNumbers">None yet</div>
+</div>
+</div>
+<div id="revealPanel" class="card reveal hidden" aria-live="polite">
+<div class="reveal-stats">
+<div>
+<small>GROUP AVERAGE</small>
+<b id="averageValue">0</b>
+</div>
+<span>×</span>
+<div>
+<small>FACTOR</small>
+<b id="revealFactor">⅔</b>
+</div>
+<span>=</span>
+<div class="target-stat">
+<small>THE TARGET</small>
+<b id="targetValue">0</b>
+</div>
+</div>
+<div id="plot" class="plot">
+</div>
+<div class="plot-labels">
+<span>0</span>
+<span>100</span>
+</div>
+<div id="resultSummary" class="result-summary">
+</div>
+<p class="small center">Observe the group. The next iteration begins shortly.</p>
+</div>
+<div class="history-card">
+<div class="section-title">THE TRAJECTORY <span>PREVIOUS TARGETS</span>
+</div>
+<div id="history" class="history">
+<span class="small">Your collective history starts after the first reveal.</span>
+</div>
+</div>
+</div>
+<p id="spectatorNote" class="spectator-note hidden">You're observing this match. You can play when the host starts the next one.</p>
+</div>
+<aside class="card scoreboard">
+<div class="section-title">THE COLLECTIVE <span id="lockedCount">
+</span>
+</div>
+<div id="gamePlayers">
+</div>
+<p class="small">There is no speed bonus. Take the time to think.</p>
+</aside>
+</div>
+</section>
+
+<section id="finish" class="view hidden stage finish">
+<span class="eyebrow">EIGHT ITERATIONS. ONE COLLECTIVE.</span>
+<h1>A different kind<br>
+<em>of understanding.</em>
+</h1>
+<p id="winner" class="winner">
+</p>
+<div class="finish-grid">
+<div class="card">
+<div class="section-title">FINAL STANDINGS</div>
+<div id="finalPlayers">
+</div>
+</div>
+<aside class="card rematch">
+<span class="eyebrow">THE NEXT EXPERIMENT</span>
+<h2>Same people.<br>New assumptions.</h2>
+<p>The numbers reset. The knowledge stays. See how your group adapts in another match.</p>
+<button id="rematch" class="button primary">Play another match <span>↗</span>
+</button>
+<p id="rematchNote" class="small">
+</p>
+<button id="finishLeave" class="text-button">Leave room</button>
+</aside>
+</div>
+<div class="card final-history">
+<div class="section-title">YOUR GROUP'S TRAJECTORY</div>
+<div id="finalHistory" class="history">
+</div>
+</div>
+</section>
+</main>
+<footer>
+<span>converge</span> THE INTERESTING PART IS EVERYONE ELSE. <b>↗</b>
+</footer>
+<div id="toast" class="toast" role="status">
+</div>
+</body>
+</html>
